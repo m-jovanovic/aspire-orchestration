@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsAspireHost>true</IsAspireHost>
+    <UserSecretsId>4929ae5d-f234-4df1-a9a7-3e78f081c0f8</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="8.2.0" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="8.2.0" />
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="8.2.0" />
+    <PackageReference Include="Jerry.WaitForDependencies.Aspire.Hosting" Version="0.0.1" />
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ContentPlatform.Api\ContentPlatform.Api.csproj" />
+    <ProjectReference Include="..\ContentPlatform.Presentation\ContentPlatform.Presentation.csproj" />
+    <ProjectReference Include="..\ContentPlatform.Reporting.Api\ContentPlatform.Reporting.Api.csproj" />
+  </ItemGroup>
+
+</Project>

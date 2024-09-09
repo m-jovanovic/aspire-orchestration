@@ -1,0 +1,146 @@
+﻿@page "/"
+@inject IHttpClientFactory HttpClientFactory
+@using System.Text.Json
+@using System.Text.Json.Serialization
+
+<PageTitle>Home</PageTitle>
+
+<div class="container mt-4">
+    <h1 class="mb-4">Article Management</h1>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h2 class="mb-3">Create New Article</h2>
+            <EditForm Model="@newArticle" OnValidSubmit="CreateArticle" class="mb-4">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Title:</label>
+                    <InputText id="title" @bind-Value="newArticle.Title" class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label for="content" class="form-label">Content:</label>
+                    <InputTextArea id="content" @bind-Value="newArticle.Content" class="form-control" rows="5" />
+                </div>
+                <div class="mb-3">
+                    <label for="tags" class="form-label">Tags (comma-separated):</label>
+                    <InputText id="tags" @bind-Value="tagsInput" class="form-control" />
+                </div>
+                <button type="submit" class="btn btn-primary">Create Article</button>
+            </EditForm>
+        </div>
+
+        <div class="col-md-6">
+            <h2 class="mb-3">Article List</h2>
+            <button @onclick="LoadArticles" class="btn btn-primary mb-3">Refresh Articles</button>
+            @if (articles != null && articles.Any())
+            {
+                <div class="list-group">
+                    @foreach (var article in articles)
+                    {
+                        <div class="list-group-item d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="mb-1">@article.Title</h5>
+                                <p class="mb-1">@article.Content</p>
+                                <small>Tags: @string.Join(", ", article.Tags)</small>
+                            </div>
+                            <button @onclick="() => DeleteArticle(article.Id)" class="btn btn-link text-danger">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p>No articles found.</p>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private ArticleRequest newArticle = new();
+    private string tagsInput = "";
+    private List<ArticleResponse> articles;
+    private HttpClient httpClient;
+
+    protected override void OnInitialized()
+    {
+        httpClient = HttpClientFactory.CreateClient("ContentPlatform.Api");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadArticles();
+    }
+
+    private async Task CreateArticle()
+    {
+        newArticle.Tags = tagsInput.Split(',').Select(t => t.Trim()).ToList();
+        var response = await httpClient.PostAsJsonAsync("/api/articles", newArticle);
+        if (response.IsSuccessStatusCode)
+        {
+            // Clear the form
+            newArticle = new();
+            tagsInput = "";
+
+            // Refresh the article list
+            await LoadArticles();
+        }
+        else
+        {
+            // Handle error - you might want to display an error message
+        }
+    }
+
+    private async Task LoadArticles()
+    {
+        var response = await httpClient.GetAsync("/api/articles");
+        if (response.IsSuccessStatusCode)
+        {
+            articles = await response.Content.ReadFromJsonAsync<List<ArticleResponse>>();
+        }
+        else
+        {
+            // Handle error - you might want to display an error message
+            articles = new List<ArticleResponse>();
+        }
+    }
+
+    private async Task DeleteArticle(Guid id)
+    {
+        var response = await httpClient.DeleteAsync($"/api/articles/{id}");
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadArticles();
+        }
+        else
+        {
+            // Handle error - you might want to display an error message
+        }
+    }
+
+    public class ArticleRequest
+    {
+        public string Title { get; set; }
+        public string Content { get; set; }
+        public List<string> Tags { get; set; }
+    }
+
+    public class ArticleResponse
+    {
+        [JsonPropertyName("id")]
+        public Guid Id { get; set; }
+
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
+
+        [JsonPropertyName("content")]
+        public string Content { get; set; }
+
+        [JsonPropertyName("tags")]
+        public List<string> Tags { get; set; }
+    }
+}
